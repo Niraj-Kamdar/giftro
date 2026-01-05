@@ -17,12 +17,14 @@ describe('animationEngine', () => {
       expect(config.role).toBe('Software Engineer')
       expect(config.socials).toHaveLength(3)
       expect(config.socials[0]).toEqual({ type: 'x', handle: '0xkniraj', enabled: true })
-      expect(config.speed).toBe(50)
+      expect(config.speed).toBe(2) // 1-5 scale (1 = fast, 5 = slow)
       expect(config.font.family).toBe('mono')
       expect(config.font.size).toBe(24)
       expect(config.font.color).toBe('#ffffff')
       expect(config.background.type).toBe('particle')
       expect(config.background.color).toBe('#9b5de5')
+      expect(config.gif.fps).toBe(10)
+      expect(config.gif.quality).toBe(20)
     })
   })
 
@@ -157,7 +159,7 @@ describe('animationEngine', () => {
       const steps = generateAnimationSteps(config)
 
       const fastFrames = calculateTotalFrames(steps, 1)
-      const slowFrames = calculateTotalFrames(steps, 500)
+      const slowFrames = calculateTotalFrames(steps, 5)
 
       expect(slowFrames).toBeGreaterThan(fastFrames)
     })

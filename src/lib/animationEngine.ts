@@ -1,11 +1,14 @@
 import { type AnimationConfig, type AnimationStep, type FrameState, SOCIAL_CONFIG } from './types'
 
-const PAUSE_FRAMES = 24 // ~2 seconds at 12fps
+const BASE_PAUSE_FRAMES = 12 // Base pause duration (scaled by speed)
 const DELETE_SPEED_FACTOR = 0.5 // Delete is faster than typing
 
 export function generateAnimationSteps(config: AnimationConfig): AnimationStep[] {
   const steps: AnimationStep[] = []
-  const { introText, name, role, socials } = config
+  const { introText, name, role, socials, speed } = config
+
+  // Speed multiplier: 1 = fast (small pauses), 10 = slow (long pauses)
+  const pauseFrames = Math.round(BASE_PAUSE_FRAMES * speed)
 
   // Track current text after intro to know what to delete
   let currentSuffix = ''
@@ -16,7 +19,7 @@ export function generateAnimationSteps(config: AnimationConfig): AnimationStep[]
   // Step 2: Type name
   if (name) {
     steps.push({ type: 'type', text: ` ${name}` })
-    steps.push({ type: 'pause', duration: PAUSE_FRAMES })
+    steps.push({ type: 'pause', duration: pauseFrames })
     currentSuffix = ` ${name}`
   }
 
@@ -26,7 +29,7 @@ export function generateAnimationSteps(config: AnimationConfig): AnimationStep[]
       steps.push({ type: 'delete', count: currentSuffix.length })
     }
     steps.push({ type: 'type', text: ` ${role}` })
-    steps.push({ type: 'pause', duration: PAUSE_FRAMES })
+    steps.push({ type: 'pause', duration: pauseFrames })
     currentSuffix = ` ${role}`
   }
 
@@ -40,18 +43,19 @@ export function generateAnimationSteps(config: AnimationConfig): AnimationStep[]
     const socialConfig = SOCIAL_CONFIG[social.type]
     const displayText = ` ${socialConfig.prefix}${social.handle}${socialConfig.suffix}`
     steps.push({ type: 'type', text: displayText })
-    steps.push({ type: 'pause', duration: PAUSE_FRAMES })
+    steps.push({ type: 'pause', duration: pauseFrames })
     currentSuffix = displayText
   }
 
   // Final pause before loop
-  steps.push({ type: 'pause', duration: PAUSE_FRAMES * 2 })
+  steps.push({ type: 'pause', duration: pauseFrames * 2 })
 
   return steps
 }
 
 export function calculateTotalFrames(steps: AnimationStep[], speed: number): number {
-  const framesPerChar = Math.max(1, Math.round((speed / 1000) * 12)) // Convert ms to frames at 12fps
+  // Speed 1-10 maps directly to frames per character
+  const framesPerChar = Math.max(1, Math.round(speed))
   let total = 0
 
   for (const step of steps) {
@@ -82,7 +86,8 @@ export function interpolateFrame(
   frameIndex: number,
   speed: number
 ): FrameState {
-  const framesPerChar = Math.max(1, Math.round((speed / 1000) * 12))
+  // Speed 1-10 maps directly to frames per character
+  const framesPerChar = Math.max(1, Math.round(speed))
   let currentFrame = 0
   let currentText = ''
   let cursorVisible = true
@@ -170,7 +175,7 @@ export function getDefaultConfig(): AnimationConfig {
       { type: 'sns', handle: '0xkniraj', enabled: true },
       { type: 'ens', handle: '0xkniraj.farcaster', enabled: true },
     ],
-    speed: 50,
+    speed: 2, // 1-10 scale (1 = fast, 10 = slow)
     font: {
       family: 'mono',
       size: 24,
@@ -183,6 +188,10 @@ export function getDefaultConfig(): AnimationConfig {
       color: '#9b5de5',
       width: 600,
       height: 200,
+    },
+    gif: {
+      fps: 10,
+      quality: 20, // Higher = smaller file, lower quality
     },
   }
 }

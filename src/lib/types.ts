@@ -23,14 +23,20 @@ export interface BackgroundConfig {
   height: number
 }
 
+export interface GifSettings {
+  fps: 6 | 8 | 10 | 12 // frames per second
+  quality: number // 1-30, lower = better quality but larger file
+}
+
 export interface AnimationConfig {
   introText: string
   name: string
   role: string
   socials: Social[]
-  speed: number // 1-100 ms per character
+  speed: number // 1-10, multiplier for animation speed (1 = fast, 10 = slow)
   font: FontConfig
   background: BackgroundConfig
+  gif: GifSettings
 }
 
 export type AnimationStep =

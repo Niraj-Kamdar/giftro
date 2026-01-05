@@ -4,9 +4,6 @@ import { renderFrame, createOffscreenCanvas } from './canvasRenderer'
 import { createBackgroundState, updateBackgroundState } from './backgroundRenderer'
 import { type AnimationConfig } from './types'
 
-const FPS = 12
-const FRAME_DELAY = Math.round(1000 / FPS) // ~83ms per frame
-
 interface EncoderProgress {
   phase: 'rendering' | 'encoding' | 'complete'
   progress: number // 0-100
@@ -21,6 +18,10 @@ export async function generateGif(
   onProgress?: ProgressCallback
 ): Promise<Blob> {
   const { width, height, color, type: backgroundType } = config.background
+  const { fps, quality } = config.gif
+
+  // Calculate frame delay based on FPS
+  const frameDelay = Math.round(1000 / fps)
 
   // Generate animation data
   const steps = generateAnimationSteps(config)
@@ -32,7 +33,7 @@ export async function generateGif(
   // Initialize GIF encoder
   const gif = new GIF({
     workers: 2,
-    quality: 10,
+    quality, // Lower = better quality but larger file
     width,
     height,
     workerScript: '/gif.worker.js',
@@ -58,7 +59,7 @@ export async function generateGif(
     })
 
     // Add frame to GIF
-    gif.addFrame(ctx, { copy: true, delay: FRAME_DELAY })
+    gif.addFrame(ctx, { copy: true, delay: frameDelay })
 
     // Report progress
     onProgress?.({

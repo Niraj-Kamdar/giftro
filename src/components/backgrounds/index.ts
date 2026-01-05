@@ -1,0 +1,5 @@
+export { BackgroundCanvas } from './BackgroundCanvas'
+export { ParticleBackground, initParticles, updateParticles, renderParticleBackground } from './ParticleBackground'
+export { MatrixBackground, initMatrixColumns, updateMatrixColumns, renderMatrixBackground } from './MatrixBackground'
+export { GameOfLifeBackground, initGameOfLifeGrid, updateGameOfLife, renderGameOfLifeBackground } from './GameOfLifeBackground'
+export { PlainBackground, renderPlainBackground } from './PlainBackground'

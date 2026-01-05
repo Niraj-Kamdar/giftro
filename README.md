@@ -1,14 +1,15 @@
-# GIF Intro Generator
+# Giftro
 
-Create animated typing-effect GIFs for your GitHub README. Transform your name into web3/social handles with a terminal-style animation.
+Create animated typing-effect GIFs for your GitHub README. Showcase your name, role, and social handles with a slick terminal-style animation.
 
 ## Features
 
-- Customizable intro text and name
+- Customizable intro text, name, and role
+- Multiple social handles (X, GitHub, YouTube, SNS, ENS)
+- Custom font family, size, color, bold/italic styles
 - Multiple background animations (Particles, Matrix, Game of Life, Plain)
-- 5 color themes (Lavender, Pink, Banana, Sky, Aqua)
+- Custom color picker with preset themes
 - Configurable typing speed
-- Support for .sol, .farcaster.eth, and x.com handles
 - Live preview before generating
 - Client-side GIF encoding (no server required)
 
@@ -37,9 +38,14 @@ bun run build
 
 ## Usage
 
-1. Enter your intro text and name
-2. Configure username prefix and select handles
-3. Choose a background animation and color theme
-4. Adjust typing speed
-5. Preview the animation
-6. Click "Generate GIF" to download
+1. Enter your intro text, name, and role
+2. Add your social handles (optional)
+3. Customize font style and colors
+4. Choose a background animation
+5. Adjust typing speed
+6. Preview the animation
+7. Click "Generate GIF" to download
+
+## Credits
+
+Logo icon by [SVG Repo](https://www.svgrepo.com) - CC Attribution License

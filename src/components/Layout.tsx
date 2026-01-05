@@ -22,11 +22,10 @@ export function Layout({ children }: LayoutProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-lavender-500 to-pink-500 flex items-center justify-center">
-              <span className="text-sm font-bold">GIF</span>
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-lavender-500 via-pink-500 to-aqua-500 bg-clip-text text-transparent">
-              Intro Generator
+            <img src="/vp.svg" alt="Giftro" className="w-8 h-8" />
+            <h1 className="text-xl font-bold">
+              <span className="bg-gradient-to-r from-lavender-500 via-pink-500 to-aqua-500 bg-clip-text text-transparent">Giftro</span>
+              <span className="text-white/50 font-normal text-base ml-2">GIF Intro Generator</span>
             </h1>
           </motion.div>
 
@@ -36,7 +35,7 @@ export function Layout({ children }: LayoutProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <span className="hidden sm:inline text-xs text-white/40 px-2 py-1 rounded-full border border-white/10">
+            <span className="hidden sm:inline text-xs font-medium text-lavender-400 px-3 py-1 rounded-full bg-lavender-500/15 border border-lavender-500/30">
               v1.0
             </span>
           </motion.div>

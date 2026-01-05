@@ -1,6 +1,6 @@
 # Giftro
 
-![](./assets/niraj-kamdar-intro.gif)
+![](./assets/ezgif.com-optimize.gif)
 
 Create animated typing-effect GIFs for your GitHub README. Showcase your name, role, and social handles with a slick terminal-style animation.
 

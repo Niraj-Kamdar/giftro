@@ -1,10 +1,24 @@
 export type BackgroundType = 'particle' | 'matrix' | 'gameoflife' | 'plain'
 
-export type ColorScheme = 'lavender' | 'pink' | 'banana' | 'sky' | 'aqua'
+export type SocialType = 'x' | 'sns' | 'ens' | 'youtube' | 'github'
+
+export interface Social {
+  type: SocialType
+  handle: string
+  enabled: boolean
+}
+
+export interface FontConfig {
+  family: 'mono' | 'sans' | 'serif'
+  size: number // 16-32
+  color: string // hex color
+  bold: boolean
+  italic: boolean
+}
 
 export interface BackgroundConfig {
   type: BackgroundType
-  colorScheme: ColorScheme
+  color: string // hex color for animation
   width: number
   height: number
 }
@@ -12,13 +26,10 @@ export interface BackgroundConfig {
 export interface AnimationConfig {
   introText: string
   name: string
-  prefix: string
-  handles: {
-    sol: boolean
-    farcaster: boolean
-    twitter: boolean
-  }
-  speed: number // ms per character
+  role: string
+  socials: Social[]
+  speed: number // 1-100 ms per character
+  font: FontConfig
   background: BackgroundConfig
 }
 
@@ -35,10 +46,46 @@ export interface FrameState {
   backgroundFrame: number
 }
 
-export const COLOR_VALUES: Record<ColorScheme, { primary: string; secondary: string; glow: string }> = {
-  lavender: { primary: '#9b5de5', secondary: '#7725dc', glow: 'rgba(155, 93, 229, 0.3)' },
-  pink: { primary: '#f15bb5', secondary: '#eb1e99', glow: 'rgba(241, 91, 181, 0.3)' },
-  banana: { primary: '#fee440', secondary: '#fcda01', glow: 'rgba(254, 228, 64, 0.3)' },
-  sky: { primary: '#00bbf9', secondary: '#0096c8', glow: 'rgba(0, 187, 249, 0.3)' },
-  aqua: { primary: '#00f5d4', secondary: '#00c4aa', glow: 'rgba(0, 245, 212, 0.3)' },
+// Social display config
+export const SOCIAL_CONFIG: Record<SocialType, { prefix: string; suffix: string; label: string }> = {
+  x: { prefix: 'x.com/', suffix: '', label: 'X (Twitter)' },
+  sns: { prefix: '', suffix: '.sol', label: 'SNS (Solana)' },
+  ens: { prefix: '', suffix: '.eth', label: 'ENS' },
+  youtube: { prefix: 'youtube.com/@', suffix: '', label: 'YouTube' },
+  github: { prefix: 'github.com/', suffix: '', label: 'GitHub' },
+}
+
+// Font families mapping
+export const FONT_FAMILIES: Record<FontConfig['family'], string> = {
+  mono: "'JetBrains Mono', 'Fira Code', monospace",
+  sans: "'Inter', 'Helvetica Neue', sans-serif",
+  serif: "'Georgia', 'Times New Roman', serif",
+}
+
+// Preset colors for quick selection
+export const COLOR_PRESETS = [
+  { name: 'Lavender', value: '#9b5de5' },
+  { name: 'Pink', value: '#f15bb5' },
+  { name: 'Banana', value: '#fee440' },
+  { name: 'Sky', value: '#00bbf9' },
+  { name: 'Aqua', value: '#00f5d4' },
+  { name: 'Orange', value: '#ff6b35' },
+  { name: 'Green', value: '#2ec4b6' },
+  { name: 'Red', value: '#e63946' },
+]
+
+// Helper to generate glow color from hex
+export function hexToGlow(hex: string, opacity = 0.3): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
+// Helper to darken a hex color
+export function darkenHex(hex: string, amount = 0.2): string {
+  const r = Math.max(0, Math.floor(parseInt(hex.slice(1, 3), 16) * (1 - amount)))
+  const g = Math.max(0, Math.floor(parseInt(hex.slice(3, 5), 16) * (1 - amount)))
+  const b = Math.max(0, Math.floor(parseInt(hex.slice(5, 7), 16) * (1 - amount)))
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
 }

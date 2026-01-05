@@ -20,7 +20,7 @@ export async function generateGif(
   config: AnimationConfig,
   onProgress?: ProgressCallback
 ): Promise<Blob> {
-  const { width, height, colorScheme, type: backgroundType } = config.background
+  const { width, height, color, type: backgroundType } = config.background
 
   // Generate animation data
   const steps = generateAnimationSteps(config)
@@ -50,7 +50,12 @@ export async function generateGif(
     const frameState = interpolateFrame(steps, frame, config.speed)
 
     // Render frame
-    renderFrame(ctx, frameState, backgroundState, { width, height, colorScheme })
+    renderFrame(ctx, frameState, backgroundState, {
+      width,
+      height,
+      font: config.font,
+      backgroundColor: color,
+    })
 
     // Add frame to GIF
     gif.addFrame(ctx, { copy: true, delay: FRAME_DELAY })

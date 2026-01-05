@@ -1,4 +1,4 @@
-import { type BackgroundType, type ColorScheme } from './types'
+import { type BackgroundType } from './types'
 import {
   initParticles,
   updateParticles,
@@ -83,27 +83,27 @@ export function renderBackground(
   state: BackgroundState,
   width: number,
   height: number,
-  colorScheme: ColorScheme
+  color: string // hex color
 ) {
   switch (state.type) {
     case 'particle':
       if (state.particles) {
-        renderParticleBackground(ctx, width, height, colorScheme, state.particles, state.frame)
+        renderParticleBackground(ctx, width, height, color, state.particles, state.frame)
       }
       break
     case 'matrix':
       if (state.matrixColumns) {
-        renderMatrixBackground(ctx, width, height, colorScheme, state.matrixColumns)
+        renderMatrixBackground(ctx, width, height, color, state.matrixColumns)
       }
       break
     case 'gameoflife':
       if (state.gameOfLifeGrid) {
-        renderGameOfLifeBackground(ctx, width, height, colorScheme, state.gameOfLifeGrid, 8)
+        renderGameOfLifeBackground(ctx, width, height, color, state.gameOfLifeGrid, 8)
       }
       break
     case 'plain':
     default:
-      renderPlainBackground(ctx, width, height, colorScheme)
+      renderPlainBackground(ctx, width, height, color)
       break
   }
 }

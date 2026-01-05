@@ -1,4 +1,4 @@
-import { type BackgroundType, type ColorScheme } from '../../lib/types'
+import { type BackgroundType } from '../../lib/types'
 import { ParticleBackground } from './ParticleBackground'
 import { MatrixBackground } from './MatrixBackground'
 import { GameOfLifeBackground } from './GameOfLifeBackground'
@@ -6,7 +6,7 @@ import { PlainBackground } from './PlainBackground'
 
 interface BackgroundCanvasProps {
   type: BackgroundType
-  colorScheme: ColorScheme
+  color: string // hex color
   width: number
   height: number
   className?: string
@@ -14,12 +14,12 @@ interface BackgroundCanvasProps {
 
 export function BackgroundCanvas({
   type,
-  colorScheme,
+  color,
   width,
   height,
   className,
 }: BackgroundCanvasProps) {
-  const props = { width, height, colorScheme, className }
+  const props = { width, height, color, className }
 
   switch (type) {
     case 'particle':

@@ -40,6 +40,14 @@ export function AnimationPreview({ config }: AnimationPreviewProps) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    // Reset canvas context state to avoid corruption
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.globalAlpha = 1
+    ctx.globalCompositeOperation = 'source-over'
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 0
+
     // Update background state
     if (backgroundStateRef.current) {
       backgroundStateRef.current = updateBackgroundState(
@@ -53,9 +61,10 @@ export function AnimationPreview({ config }: AnimationPreviewProps) {
     renderFrame(ctx, frameState, backgroundStateRef.current, {
       width: config.background.width,
       height: config.background.height,
-      colorScheme: config.background.colorScheme,
+      font: config.font,
+      backgroundColor: config.background.color,
     })
-  }, [frameState, config.background])
+  }, [frameState, config.background, config.font])
 
   const progress = totalFrames > 0 ? (currentFrame / totalFrames) * 100 : 0
   const durationSeconds = (totalFrames / 12).toFixed(1)

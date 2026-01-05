@@ -1,16 +1,15 @@
 import { useEffect, useRef } from 'react'
-import { COLOR_VALUES, type ColorScheme } from '../../lib/types'
 
 interface GameOfLifeBackgroundProps {
   width: number
   height: number
-  colorScheme: ColorScheme
+  color: string // hex color
   className?: string
 }
 
 const CELL_SIZE = 8
 
-export function GameOfLifeBackground({ width, height, colorScheme, className }: GameOfLifeBackgroundProps) {
+export function GameOfLifeBackground({ width, height, color, className }: GameOfLifeBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gridRef = useRef<boolean[][]>([])
   const frameCountRef = useRef(0)
@@ -38,14 +37,14 @@ export function GameOfLifeBackground({ width, height, colorScheme, className }: 
         gridRef.current = updateGameOfLife(gridRef.current, cols, rows)
       }
 
-      renderGameOfLifeBackground(ctx, width, height, colorScheme, gridRef.current, CELL_SIZE)
+      renderGameOfLifeBackground(ctx, width, height, color, gridRef.current, CELL_SIZE)
       animationId = requestAnimationFrame(animate)
     }
 
     animate()
 
     return () => cancelAnimationFrame(animationId)
-  }, [width, height, colorScheme])
+  }, [width, height, color])
 
   return (
     <canvas
@@ -119,12 +118,10 @@ export function renderGameOfLifeBackground(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  colorScheme: ColorScheme,
+  color: string,
   grid: boolean[][],
   cellSize: number
 ) {
-  const colors = COLOR_VALUES[colorScheme]
-
   // Dark background
   ctx.fillStyle = '#0a0a0a'
   ctx.fillRect(0, 0, width, height)
@@ -137,10 +134,10 @@ export function renderGameOfLifeBackground(
         const py = y * cellSize
 
         // Glow effect
-        ctx.shadowColor = colors.primary
+        ctx.shadowColor = color
         ctx.shadowBlur = 4
 
-        ctx.fillStyle = colors.primary
+        ctx.fillStyle = color
         ctx.fillRect(px + 1, py + 1, cellSize - 2, cellSize - 2)
       }
     }

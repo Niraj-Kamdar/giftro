@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { COLOR_VALUES, type ColorScheme } from '../../lib/types'
 
 interface MatrixColumn {
   x: number
@@ -7,21 +6,23 @@ interface MatrixColumn {
   speed: number
   chars: string[]
   length: number
+  opacity: number
 }
 
 interface MatrixBackgroundProps {
   width: number
   height: number
-  colorScheme: ColorScheme
+  color: string // hex color
   className?: string
 }
 
-const CHAR_SIZE = 14
-const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789'
+const CHAR_SIZE = 12
+const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン01'
 
-export function MatrixBackground({ width, height, colorScheme, className }: MatrixBackgroundProps) {
+export function MatrixBackground({ width, height, color, className }: MatrixBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const columnsRef = useRef<MatrixColumn[]>([])
+  const bgCanvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -30,6 +31,11 @@ export function MatrixBackground({ width, height, colorScheme, className }: Matr
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    // Create background buffer for fade effect
+    bgCanvasRef.current = document.createElement('canvas')
+    bgCanvasRef.current.width = width
+    bgCanvasRef.current.height = height
+
     // Initialize columns
     columnsRef.current = initMatrixColumns(width, height)
 
@@ -37,14 +43,14 @@ export function MatrixBackground({ width, height, colorScheme, className }: Matr
 
     const animate = () => {
       updateMatrixColumns(columnsRef.current, height)
-      renderMatrixBackground(ctx, width, height, colorScheme, columnsRef.current)
+      renderMatrixBackground(ctx, width, height, color, columnsRef.current)
       animationId = requestAnimationFrame(animate)
     }
 
     animate()
 
     return () => cancelAnimationFrame(animationId)
-  }, [width, height, colorScheme])
+  }, [width, height, color])
 
   return (
     <canvas
@@ -59,13 +65,14 @@ export function MatrixBackground({ width, height, colorScheme, className }: Matr
 export function initMatrixColumns(width: number, height: number): MatrixColumn[] {
   const columnCount = Math.floor(width / CHAR_SIZE)
   return Array.from({ length: columnCount }, (_, i) => ({
-    x: i * CHAR_SIZE,
-    y: Math.random() * height - height,
-    speed: Math.random() * 2 + 1,
-    chars: Array.from({ length: Math.floor(height / CHAR_SIZE) + 5 }, () =>
+    x: i * CHAR_SIZE + CHAR_SIZE / 2,
+    y: Math.random() * height * 2 - height,
+    speed: Math.random() * 3 + 2,
+    chars: Array.from({ length: Math.floor(height / CHAR_SIZE) + 10 }, () =>
       CHARS[Math.floor(Math.random() * CHARS.length)]
     ),
-    length: Math.floor(Math.random() * 10) + 5,
+    length: Math.floor(Math.random() * 15) + 8,
+    opacity: Math.random() * 0.5 + 0.5,
   }))
 }
 
@@ -74,14 +81,15 @@ export function updateMatrixColumns(columns: MatrixColumn[], height: number) {
     col.y += col.speed
 
     // Reset when off screen
-    if (col.y > height + col.length * CHAR_SIZE) {
+    if (col.y - col.length * CHAR_SIZE > height) {
       col.y = -col.length * CHAR_SIZE
-      col.speed = Math.random() * 2 + 1
-      col.length = Math.floor(Math.random() * 10) + 5
+      col.speed = Math.random() * 3 + 2
+      col.length = Math.floor(Math.random() * 15) + 8
+      col.opacity = Math.random() * 0.5 + 0.5
     }
 
-    // Randomly change characters
-    if (Math.random() < 0.02) {
+    // Randomly change characters for shimmer effect
+    if (Math.random() < 0.05) {
       const idx = Math.floor(Math.random() * col.chars.length)
       col.chars[idx] = CHARS[Math.floor(Math.random() * CHARS.length)]
     }
@@ -92,34 +100,45 @@ export function renderMatrixBackground(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  colorScheme: ColorScheme,
+  color: string,
   columns: MatrixColumn[]
 ) {
-  const colors = COLOR_VALUES[colorScheme]
-
-  // Fade effect
-  ctx.fillStyle = 'rgba(10, 10, 10, 0.1)'
+  // Clear with solid dark background (no trail effect that causes artifacts)
+  ctx.fillStyle = '#050505'
   ctx.fillRect(0, 0, width, height)
 
-  ctx.font = `${CHAR_SIZE}px monospace`
+  ctx.font = `bold ${CHAR_SIZE}px monospace`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
 
   for (const col of columns) {
     for (let i = 0; i < col.length; i++) {
-      const charY = col.y + i * CHAR_SIZE
+      const charY = col.y - i * CHAR_SIZE
+
+      // Skip if outside viewport
       if (charY < -CHAR_SIZE || charY > height + CHAR_SIZE) continue
 
-      const charIdx = Math.floor(charY / CHAR_SIZE) % col.chars.length
-      const char = col.chars[Math.abs(charIdx)]
+      const charIdx = Math.abs(Math.floor((col.y - charY) / CHAR_SIZE)) % col.chars.length
+      const char = col.chars[charIdx]
 
-      // Head character is brighter
-      if (i === col.length - 1) {
+      // Calculate fade based on position in trail
+      const fade = 1 - i / col.length
+      const alpha = Math.floor(fade * col.opacity * 255)
+
+      if (i === 0) {
+        // Head character - brightest with glow
+        ctx.shadowColor = color
+        ctx.shadowBlur = 8
         ctx.fillStyle = '#ffffff'
-        ctx.shadowColor = colors.primary
-        ctx.shadowBlur = 10
+      } else if (i === 1) {
+        // Second char - bright colored
+        ctx.shadowColor = color
+        ctx.shadowBlur = 4
+        ctx.fillStyle = color
       } else {
-        const fade = 1 - i / col.length
-        ctx.fillStyle = `${colors.primary}${Math.floor(fade * 200).toString(16).padStart(2, '0')}`
+        // Trail - fading color
         ctx.shadowBlur = 0
+        ctx.fillStyle = `${color}${alpha.toString(16).padStart(2, '0')}`
       }
 
       ctx.fillText(char, col.x, charY)

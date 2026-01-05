@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react'
-import { COLOR_VALUES, type ColorScheme } from '../../lib/types'
+import { hexToGlow } from '../../lib/types'
 
 interface PlainBackgroundProps {
   width: number
   height: number
-  colorScheme: ColorScheme
+  color: string // hex color
   className?: string
 }
 
-export function PlainBackground({ width, height, colorScheme, className }: PlainBackgroundProps) {
+export function PlainBackground({ width, height, color, className }: PlainBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -18,8 +18,8 @@ export function PlainBackground({ width, height, colorScheme, className }: Plain
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    renderPlainBackground(ctx, width, height, colorScheme)
-  }, [width, height, colorScheme])
+    renderPlainBackground(ctx, width, height, color)
+  }, [width, height, color])
 
   return (
     <canvas
@@ -35,10 +35,8 @@ export function renderPlainBackground(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  colorScheme: ColorScheme
+  color: string
 ) {
-  const colors = COLOR_VALUES[colorScheme]
-
   // Create gradient background
   const gradient = ctx.createLinearGradient(0, 0, width, height)
   gradient.addColorStop(0, '#0a0a0a')
@@ -53,7 +51,7 @@ export function renderPlainBackground(
     width * 0.8, height * 0.2, 0,
     width * 0.8, height * 0.2, width * 0.5
   )
-  glowGradient.addColorStop(0, colors.glow)
+  glowGradient.addColorStop(0, hexToGlow(color, 0.3))
   glowGradient.addColorStop(1, 'transparent')
 
   ctx.fillStyle = glowGradient

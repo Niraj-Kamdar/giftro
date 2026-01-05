@@ -14,61 +14,121 @@ describe('animationEngine', () => {
 
       expect(config.introText).toBe('Hey there! I am')
       expect(config.name).toBe('Niraj')
-      expect(config.prefix).toBe('0xk')
-      expect(config.handles.sol).toBe(true)
-      expect(config.handles.farcaster).toBe(true)
-      expect(config.handles.twitter).toBe(true)
+      expect(config.role).toBe('Software Engineer')
+      expect(config.socials).toHaveLength(3)
+      expect(config.socials[0]).toEqual({ type: 'x', handle: '0xkniraj', enabled: true })
       expect(config.speed).toBe(50)
+      expect(config.font.family).toBe('mono')
+      expect(config.font.size).toBe(24)
+      expect(config.font.color).toBe('#ffffff')
       expect(config.background.type).toBe('particle')
-      expect(config.background.colorScheme).toBe('lavender')
+      expect(config.background.color).toBe('#9b5de5')
     })
   })
 
   describe('generateAnimationSteps', () => {
-    it('generates type step for intro with name', () => {
+    it('generates type step for intro', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      expect(steps[0]).toEqual({ type: 'type', text: 'Hey there! I am Niraj' })
+      expect(steps[0]).toEqual({ type: 'type', text: 'Hey there! I am' })
     })
 
-    it('generates delete step for name transformation', () => {
+    it('generates type step for name with space', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      // After pause, should delete the name
-      const deleteStep = steps.find((s) => s.type === 'delete')
-      expect(deleteStep).toBeDefined()
-      expect(deleteStep?.type === 'delete' && deleteStep.count).toBe(5) // "Niraj" length
+      expect(steps[1]).toEqual({ type: 'type', text: ' Niraj' })
     })
 
-    it('generates append steps for handles', () => {
+    it('generates delete step before typing role', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      const appendSteps = steps.filter((s) => s.type === 'append')
-      expect(appendSteps.length).toBeGreaterThan(0)
+      // After intro + name + pause, should delete name then type role
+      const deleteStepIndex = steps.findIndex(
+        (s, i) => s.type === 'delete' && i > 2
+      )
+      expect(deleteStepIndex).toBeGreaterThan(0)
+
+      const deleteStep = steps[deleteStepIndex]
+      expect(deleteStep.type === 'delete' && deleteStep.count).toBe(6) // " Niraj" length
     })
 
-    it('generates steps only for enabled handles', () => {
+    it('generates steps for enabled socials', () => {
       const config: AnimationConfig = {
         ...getDefaultConfig(),
-        handles: { sol: true, farcaster: false, twitter: false },
+        role: '',
+        socials: [
+          { type: 'x', handle: '0xkniraj', enabled: true },
+        ],
       }
       const steps = generateAnimationSteps(config)
 
-      const appendSteps = steps.filter((s) => s.type === 'append')
-      expect(appendSteps.length).toBe(1)
-      expect(appendSteps[0].type === 'append' && appendSteps[0].text).toBe('.sol')
+      const xStep = steps.find(
+        (s) => s.type === 'type' && s.text.includes('x.com/')
+      )
+      expect(xStep).toBeDefined()
+      expect(xStep?.type === 'type' && xStep.text).toBe(' x.com/0xkniraj')
     })
 
-    it('generates prepend step for twitter URL', () => {
-      const config = getDefaultConfig()
+    it('skips disabled socials', () => {
+      const config: AnimationConfig = {
+        ...getDefaultConfig(),
+        role: '',
+        socials: [
+          { type: 'x', handle: '0xkniraj', enabled: false },
+          { type: 'sns', handle: 'test', enabled: true },
+        ],
+      }
       const steps = generateAnimationSteps(config)
 
-      const prependStep = steps.find((s) => s.type === 'prepend')
-      expect(prependStep).toBeDefined()
-      expect(prependStep?.type === 'prepend' && prependStep.text).toBe('https://x.com/')
+      const xStep = steps.find(
+        (s) => s.type === 'type' && s.text.includes('x.com/')
+      )
+      const snsStep = steps.find(
+        (s) => s.type === 'type' && s.text.includes('.sol')
+      )
+
+      expect(xStep).toBeUndefined()
+      expect(snsStep).toBeDefined()
+    })
+
+    it('skips socials with empty handles', () => {
+      const config: AnimationConfig = {
+        ...getDefaultConfig(),
+        role: '',
+        socials: [
+          { type: 'x', handle: '', enabled: true },
+        ],
+      }
+      const steps = generateAnimationSteps(config)
+
+      const xStep = steps.find(
+        (s) => s.type === 'type' && s.text.includes('x.com/')
+      )
+      expect(xStep).toBeUndefined()
+    })
+
+    it('generates steps for all social types', () => {
+      const config: AnimationConfig = {
+        ...getDefaultConfig(),
+        role: '',
+        socials: [
+          { type: 'x', handle: 'test', enabled: true },
+          { type: 'sns', handle: 'test', enabled: true },
+          { type: 'ens', handle: 'test', enabled: true },
+          { type: 'youtube', handle: 'test', enabled: true },
+          { type: 'github', handle: 'test', enabled: true },
+        ],
+      }
+      const steps = generateAnimationSteps(config)
+
+      expect(steps.some((s) => s.type === 'type' && s.text.includes('x.com/'))).toBe(true)
+      expect(steps.some((s) => s.type === 'type' && s.text.includes('.sol'))).toBe(true)
+      expect(steps.some((s) => s.type === 'type' && s.text.includes('.eth'))).toBe(true)
+      expect(steps.some((s) => s.type === 'type' && s.text.includes('youtube.com/@'))).toBe(true)
+      expect(steps.some((s) => s.type === 'type' && s.text.includes('github.com/'))).toBe(true)
     })
 
     it('handles empty name gracefully', () => {
@@ -79,6 +139,7 @@ describe('animationEngine', () => {
       const steps = generateAnimationSteps(config)
 
       expect(steps.length).toBeGreaterThan(0)
+      expect(steps[0]).toEqual({ type: 'type', text: 'Hey there! I am' })
     })
   })
 
@@ -95,8 +156,8 @@ describe('animationEngine', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      const fastFrames = calculateTotalFrames(steps, 30)
-      const slowFrames = calculateTotalFrames(steps, 150)
+      const fastFrames = calculateTotalFrames(steps, 1)
+      const slowFrames = calculateTotalFrames(steps, 500)
 
       expect(slowFrames).toBeGreaterThan(fastFrames)
     })
@@ -140,10 +201,13 @@ describe('animationEngine', () => {
       expect(frame.backgroundFrame).toBe(42)
     })
 
-    it('handles special characters in name', () => {
+    it('handles special characters in handles', () => {
       const config: AnimationConfig = {
         ...getDefaultConfig(),
-        name: 'Test-User_123',
+        socials: [
+          { type: 'x', handle: 'test-user_123', enabled: true },
+          { type: 'ens', handle: 'test.subdomain', enabled: true },
+        ],
       }
       const steps = generateAnimationSteps(config)
       const totalFrames = calculateTotalFrames(steps, config.speed)

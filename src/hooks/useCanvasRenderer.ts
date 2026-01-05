@@ -28,10 +28,11 @@ export function useCanvasRenderer(options: RenderOptions & { backgroundType: Bac
       renderFrame(ctx, frameState, backgroundStateRef.current, {
         width: options.width,
         height: options.height,
-        colorScheme: options.colorScheme,
+        font: options.font,
+        backgroundColor: options.backgroundColor,
       })
     },
-    [options.width, options.height, options.colorScheme]
+    [options.width, options.height, options.font, options.backgroundColor]
   )
 
   const resetBackground = useCallback(() => {

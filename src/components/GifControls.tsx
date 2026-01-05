@@ -63,7 +63,7 @@ export function GifControls({ config, disabled }: GifControlsProps) {
 
   const handleDownload = () => {
     if (!state.blob) return
-    const filename = `${config.prefix}${config.name.toLowerCase()}-intro.gif`
+    const filename = `${config.name.toLowerCase().replace(/\s+/g, '-')}-intro.gif`
     downloadBlob(state.blob, filename)
   }
 

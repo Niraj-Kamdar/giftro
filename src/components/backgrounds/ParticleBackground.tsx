@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { COLOR_VALUES, type ColorScheme } from '../../lib/types'
 
 interface Particle {
   x: number
@@ -13,13 +12,13 @@ interface Particle {
 interface ParticleBackgroundProps {
   width: number
   height: number
-  colorScheme: ColorScheme
+  color: string // hex color
   className?: string
 }
 
 const PARTICLE_COUNT = 50
 
-export function ParticleBackground({ width, height, colorScheme, className }: ParticleBackgroundProps) {
+export function ParticleBackground({ width, height, color, className }: ParticleBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const frameRef = useRef<number>(0)
@@ -38,7 +37,7 @@ export function ParticleBackground({ width, height, colorScheme, className }: Pa
 
     const animate = () => {
       updateParticles(particlesRef.current, width, height)
-      renderParticleBackground(ctx, width, height, colorScheme, particlesRef.current, frameRef.current)
+      renderParticleBackground(ctx, width, height, color, particlesRef.current, frameRef.current)
       frameRef.current++
       animationId = requestAnimationFrame(animate)
     }
@@ -46,7 +45,7 @@ export function ParticleBackground({ width, height, colorScheme, className }: Pa
     animate()
 
     return () => cancelAnimationFrame(animationId)
-  }, [width, height, colorScheme])
+  }, [width, height, color])
 
   return (
     <canvas
@@ -86,12 +85,10 @@ export function renderParticleBackground(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  colorScheme: ColorScheme,
+  color: string,
   particles: Particle[],
   _frame: number
 ) {
-  const colors = COLOR_VALUES[colorScheme]
-
   // Clear with dark background
   ctx.fillStyle = '#0a0a0a'
   ctx.fillRect(0, 0, width, height)
@@ -100,18 +97,18 @@ export function renderParticleBackground(
   for (const p of particles) {
     ctx.beginPath()
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-    ctx.fillStyle = `${colors.primary}${Math.floor(p.opacity * 255).toString(16).padStart(2, '0')}`
+    ctx.fillStyle = `${color}${Math.floor(p.opacity * 255).toString(16).padStart(2, '0')}`
     ctx.fill()
 
     // Glow effect
     ctx.beginPath()
     ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2)
-    ctx.fillStyle = `${colors.primary}${Math.floor(p.opacity * 50).toString(16).padStart(2, '0')}`
+    ctx.fillStyle = `${color}${Math.floor(p.opacity * 50).toString(16).padStart(2, '0')}`
     ctx.fill()
   }
 
   // Draw connections between nearby particles
-  ctx.strokeStyle = `${colors.primary}20`
+  ctx.strokeStyle = `${color}20`
   ctx.lineWidth = 0.5
 
   for (let i = 0; i < particles.length; i++) {

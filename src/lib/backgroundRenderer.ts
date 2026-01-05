@@ -12,7 +12,7 @@ import {
   renderPlainBackground,
 } from '../components/backgrounds'
 
-interface BackgroundState {
+export interface BackgroundState {
   type: BackgroundType
   particles?: ReturnType<typeof initParticles>
   matrixColumns?: ReturnType<typeof initMatrixColumns>

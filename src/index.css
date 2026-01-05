@@ -1,16 +1,75 @@
 @import "tailwindcss";
 
-:root {
+@theme {
+  /* Lavender Purple */
+  --color-lavender-100: #1e0937;
+  --color-lavender-200: #3c126f;
+  --color-lavender-300: #591ba6;
+  --color-lavender-400: #7725dc;
+  --color-lavender-500: #9b5de5;
+  --color-lavender-600: #ae7dea;
+  --color-lavender-700: #c29eef;
+  --color-lavender-800: #d7bef4;
+  --color-lavender-900: #ebdffa;
+
+  /* Deep Pink */
+  --color-pink-100: #3d0527;
+  --color-pink-200: #7a0b4d;
+  --color-pink-300: #b71074;
+  --color-pink-400: #eb1e99;
+  --color-pink-500: #f15bb5;
+  --color-pink-600: #f47cc4;
+  --color-pink-700: #f69cd2;
+  --color-pink-800: #f9bde1;
+  --color-pink-900: #fcdef0;
+
+  /* Banana Cream */
+  --color-banana-100: #3f3700;
+  --color-banana-200: #7e6d01;
+  --color-banana-300: #bda401;
+  --color-banana-400: #fcda01;
+  --color-banana-500: #fee440;
+  --color-banana-600: #feea65;
+  --color-banana-700: #feef8b;
+  --color-banana-800: #fff4b2;
+  --color-banana-900: #fffad8;
+
+  /* Deep Sky Blue */
+  --color-sky-100: #002532;
+  --color-sky-200: #004b64;
+  --color-sky-300: #007096;
+  --color-sky-400: #0096c8;
+  --color-sky-500: #00bbf9;
+  --color-sky-600: #2fcbff;
+  --color-sky-700: #63d8ff;
+  --color-sky-800: #97e5ff;
+  --color-sky-900: #cbf2ff;
+
+  /* Aquamarine */
+  --color-aqua-100: #00312a;
+  --color-aqua-200: #006255;
+  --color-aqua-300: #00937f;
+  --color-aqua-400: #00c4aa;
+  --color-aqua-500: #00f5d4;
+  --color-aqua-600: #2bffe3;
+  --color-aqua-700: #60ffea;
+  --color-aqua-800: #95fff1;
+  --color-aqua-900: #cafff8;
+
+  /* Font */
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0f0f0f;
+  color: #ffffff;
 }

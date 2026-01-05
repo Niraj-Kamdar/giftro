@@ -6,38 +6,55 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b border-white/10 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background gradient */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-lavender-900/20 via-transparent to-pink-900/20" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-lavender-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-aqua-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <header className="border-b border-white/10 backdrop-blur-md bg-black/20 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <motion.h1
-            className="text-xl font-bold bg-gradient-to-r from-lavender-500 via-pink-500 to-aqua-500 bg-clip-text text-transparent"
+          <motion.div
+            className="flex items-center gap-3"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            GIF Intro Generator
-          </motion.h1>
-          <motion.a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-white/60 hover:text-white transition-colors"
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-lavender-500 to-pink-500 flex items-center justify-center">
+              <span className="text-sm font-bold">GIF</span>
+            </div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-lavender-500 via-pink-500 to-aqua-500 bg-clip-text text-transparent">
+              Intro Generator
+            </h1>
+          </motion.div>
+
+          <motion.div
+            className="flex items-center gap-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            GitHub
-          </motion.a>
+            <span className="hidden sm:inline text-xs text-white/40 px-2 py-1 rounded-full border border-white/10">
+              v1.0
+            </span>
+          </motion.div>
         </div>
       </header>
 
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative">
         {children}
       </main>
 
-      <footer className="border-t border-white/10 py-4">
-        <div className="max-w-6xl mx-auto px-4 text-center text-sm text-white/40">
-          Create animated typing GIFs for your README
+      <footer className="border-t border-white/10 py-6 backdrop-blur-sm bg-black/20">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-white/40">
+            Create animated typing GIFs for your GitHub README
+          </p>
+          <div className="flex items-center gap-4 text-sm text-white/40">
+            <span>Built with React + Tailwind</span>
+          </div>
         </div>
       </footer>
     </div>

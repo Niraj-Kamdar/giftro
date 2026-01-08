@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { Github, Twitter } from 'lucide-react'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -51,8 +52,25 @@ export function Layout({ children }: LayoutProps) {
           <p className="text-sm text-white/40">
             Create animated typing GIFs for your GitHub README
           </p>
-          <div className="flex items-center gap-4 text-sm text-white/40">
-            <span>Built with React + Tailwind</span>
+          <div className="flex items-center gap-6">
+            <a
+              href="https://github.com/Niraj-Kamdar/giftro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors"
+            >
+              <Github className="w-5 h-5" />
+              <span className="hidden sm:inline">Star on GitHub</span>
+            </a>
+            <a
+              href="https://x.com/0xkniraj"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors"
+            >
+              <Twitter className="w-4 h-4" />
+              <span className="hidden sm:inline">@0xkniraj</span>
+            </a>
           </div>
         </div>
       </footer>

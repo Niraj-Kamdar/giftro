@@ -16,6 +16,7 @@ export function AnimationPreview({ config }: AnimationPreviewProps) {
   const {
     currentFrame,
     totalFrames,
+    durationMs,
     frameState,
     isPlaying,
     play,
@@ -67,7 +68,7 @@ export function AnimationPreview({ config }: AnimationPreviewProps) {
   }, [frameState, config.background, config.font])
 
   const progress = totalFrames > 0 ? (currentFrame / totalFrames) * 100 : 0
-  const durationSeconds = (totalFrames / 12).toFixed(1)
+  const durationSeconds = (durationMs / 1000).toFixed(1)
 
   return (
     <div className="space-y-4">
@@ -127,7 +128,7 @@ export function AnimationPreview({ config }: AnimationPreviewProps) {
             Frame {currentFrame + 1} / {totalFrames}
           </span>
           <span>|</span>
-          <span>{durationSeconds}s @ 12fps</span>
+          <span>{durationSeconds}s</span>
         </div>
       </div>
     </div>

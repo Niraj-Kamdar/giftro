@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   generateAnimationSteps,
-  calculateTotalFrames,
-  interpolateFrame,
+  calculateDurationMs,
+  interpolateFrameAtTime,
   getDefaultConfig,
 } from '../animationEngine'
 import type { AnimationConfig } from '../types'
@@ -17,14 +17,13 @@ describe('animationEngine', () => {
       expect(config.role).toBe('Software Engineer')
       expect(config.socials).toHaveLength(3)
       expect(config.socials[0]).toEqual({ type: 'x', handle: '0xkniraj', enabled: true })
-      expect(config.speed).toBe(2) // 1-5 scale (1 = fast, 5 = slow)
       expect(config.font.family).toBe('mono')
       expect(config.font.size).toBe(24)
       expect(config.font.color).toBe('#ffffff')
       expect(config.background.type).toBe('particle')
       expect(config.background.color).toBe('#9b5de5')
-      expect(config.gif.fps).toBe(10)
-      expect(config.gif.quality).toBe(20)
+      expect(config.gif.fps).toBe(12)
+      expect(config.gif.playbackSpeed).toBe(1)
     })
   })
 
@@ -145,32 +144,47 @@ describe('animationEngine', () => {
     })
   })
 
-  describe('calculateTotalFrames', () => {
-    it('calculates positive frame count', () => {
+  describe('calculateDurationMs', () => {
+    it('calculates positive duration', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
-      const totalFrames = calculateTotalFrames(steps, config.speed)
+      const durationMs = calculateDurationMs(steps)
 
-      expect(totalFrames).toBeGreaterThan(0)
+      expect(durationMs).toBeGreaterThan(0)
     })
 
-    it('increases with slower speed', () => {
-      const config = getDefaultConfig()
-      const steps = generateAnimationSteps(config)
+    it('duration scales with content length', () => {
+      const shortConfig: AnimationConfig = {
+        ...getDefaultConfig(),
+        introText: 'Hi',
+        name: '',
+        role: '',
+        socials: [],
+      }
+      const longConfig: AnimationConfig = {
+        ...getDefaultConfig(),
+        introText: 'Hello, welcome to my profile!',
+        name: 'Alexander',
+        role: 'Senior Software Engineer',
+        socials: [],
+      }
 
-      const fastFrames = calculateTotalFrames(steps, 1)
-      const slowFrames = calculateTotalFrames(steps, 5)
+      const shortSteps = generateAnimationSteps(shortConfig)
+      const longSteps = generateAnimationSteps(longConfig)
 
-      expect(slowFrames).toBeGreaterThan(fastFrames)
+      const shortDuration = calculateDurationMs(shortSteps)
+      const longDuration = calculateDurationMs(longSteps)
+
+      expect(longDuration).toBeGreaterThan(shortDuration)
     })
   })
 
-  describe('interpolateFrame', () => {
-    it('starts with empty text at frame 0', () => {
+  describe('interpolateFrameAtTime', () => {
+    it('starts with partial text at time 0', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      const frame = interpolateFrame(steps, 0, config.speed)
+      const frame = interpolateFrameAtTime(steps, 0)
       expect(frame.text.length).toBeLessThanOrEqual(1)
     })
 
@@ -178,29 +192,30 @@ describe('animationEngine', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      const frame10 = interpolateFrame(steps, 10, config.speed)
-      const frame50 = interpolateFrame(steps, 50, config.speed)
+      const frame100ms = interpolateFrameAtTime(steps, 100)
+      const frame500ms = interpolateFrameAtTime(steps, 500)
 
-      expect(frame50.text.length).toBeGreaterThan(frame10.text.length)
+      expect(frame500ms.text.length).toBeGreaterThan(frame100ms.text.length)
     })
 
     it('toggles cursor visibility', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      const frame0 = interpolateFrame(steps, 0, config.speed)
-      const frame6 = interpolateFrame(steps, 6, config.speed)
+      const frame0 = interpolateFrameAtTime(steps, 0)
+      const frame300 = interpolateFrameAtTime(steps, 300)
 
-      // Cursor blinks every 6 frames
-      expect(frame0.cursorVisible).not.toBe(frame6.cursorVisible)
+      // Cursor blinks every 300ms
+      expect(frame0.cursorVisible).not.toBe(frame300.cursorVisible)
     })
 
     it('includes background frame number', () => {
       const config = getDefaultConfig()
       const steps = generateAnimationSteps(config)
 
-      const frame = interpolateFrame(steps, 42, config.speed)
-      expect(frame.backgroundFrame).toBe(42)
+      const frame = interpolateFrameAtTime(steps, 1000)
+      // backgroundFrame is timeMs / 16 (roughly 60fps for background)
+      expect(frame.backgroundFrame).toBe(Math.floor(1000 / 16))
     })
 
     it('handles special characters in handles', () => {
@@ -212,9 +227,9 @@ describe('animationEngine', () => {
         ],
       }
       const steps = generateAnimationSteps(config)
-      const totalFrames = calculateTotalFrames(steps, config.speed)
+      const durationMs = calculateDurationMs(steps)
 
-      const finalFrame = interpolateFrame(steps, totalFrames - 1, config.speed)
+      const finalFrame = interpolateFrameAtTime(steps, durationMs - 1)
       expect(finalFrame.text).toBeDefined()
     })
   })

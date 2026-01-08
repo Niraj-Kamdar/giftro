@@ -1,14 +1,14 @@
 import { type AnimationConfig, type AnimationStep, type FrameState, SOCIAL_CONFIG } from './types'
 
-const BASE_PAUSE_FRAMES = 12 // Base pause duration (scaled by speed)
-const DELETE_SPEED_FACTOR = 0.5 // Delete is faster than typing
+// Timing constants (milliseconds)
+const MS_PER_CHAR_TYPE = 80 // Time to type one character
+const MS_PER_CHAR_DELETE = 40 // Time to delete one character (faster than typing)
+const MS_PAUSE_BASE = 800 // Base pause duration between sections
+const CURSOR_BLINK_MS = 300 // Cursor blink interval
 
 export function generateAnimationSteps(config: AnimationConfig): AnimationStep[] {
   const steps: AnimationStep[] = []
-  const { introText, name, role, socials, speed } = config
-
-  // Speed multiplier: 1 = fast (small pauses), 10 = slow (long pauses)
-  const pauseFrames = Math.round(BASE_PAUSE_FRAMES * speed)
+  const { introText, name, role, socials } = config
 
   // Track current text after intro to know what to delete
   let currentSuffix = ''
@@ -19,7 +19,7 @@ export function generateAnimationSteps(config: AnimationConfig): AnimationStep[]
   // Step 2: Type name
   if (name) {
     steps.push({ type: 'type', text: ` ${name}` })
-    steps.push({ type: 'pause', duration: pauseFrames })
+    steps.push({ type: 'pause', duration: 1 }) // 1x base pause
     currentSuffix = ` ${name}`
   }
 
@@ -29,7 +29,7 @@ export function generateAnimationSteps(config: AnimationConfig): AnimationStep[]
       steps.push({ type: 'delete', count: currentSuffix.length })
     }
     steps.push({ type: 'type', text: ` ${role}` })
-    steps.push({ type: 'pause', duration: pauseFrames })
+    steps.push({ type: 'pause', duration: 1 })
     currentSuffix = ` ${role}`
   }
 
@@ -43,126 +43,121 @@ export function generateAnimationSteps(config: AnimationConfig): AnimationStep[]
     const socialConfig = SOCIAL_CONFIG[social.type]
     const displayText = ` ${socialConfig.prefix}${social.handle}${socialConfig.suffix}`
     steps.push({ type: 'type', text: displayText })
-    steps.push({ type: 'pause', duration: pauseFrames })
+    steps.push({ type: 'pause', duration: 1 })
     currentSuffix = displayText
   }
 
   // Final pause before loop
-  steps.push({ type: 'pause', duration: pauseFrames * 2 })
+  steps.push({ type: 'pause', duration: 2 }) // 2x base pause
 
   return steps
 }
 
-export function calculateTotalFrames(steps: AnimationStep[], speed: number): number {
-  // Speed 1-10 maps directly to frames per character
-  const framesPerChar = Math.max(1, Math.round(speed))
-  let total = 0
+/**
+ * Calculate the total duration of the animation in milliseconds
+ */
+export function calculateDurationMs(steps: AnimationStep[]): number {
+  let duration = 0
 
   for (const step of steps) {
     switch (step.type) {
       case 'type':
-        total += step.text.length * framesPerChar
+        duration += step.text.length * MS_PER_CHAR_TYPE
         break
       case 'delete':
-        total += Math.ceil(step.count * framesPerChar * DELETE_SPEED_FACTOR)
+        duration += step.count * MS_PER_CHAR_DELETE
         break
       case 'append':
-        total += step.text.length * framesPerChar
+        duration += step.text.length * MS_PER_CHAR_TYPE
         break
       case 'prepend':
-        total += step.text.length * framesPerChar
+        duration += step.text.length * MS_PER_CHAR_TYPE
         break
       case 'pause':
-        total += step.duration
+        duration += step.duration * MS_PAUSE_BASE
         break
     }
   }
 
-  return total
+  return duration
 }
 
-export function interpolateFrame(
+/**
+ * Get the animation state at a specific time in milliseconds
+ */
+export function interpolateFrameAtTime(
   steps: AnimationStep[],
-  frameIndex: number,
-  speed: number
+  timeMs: number
 ): FrameState {
-  // Speed 1-10 maps directly to frames per character
-  const framesPerChar = Math.max(1, Math.round(speed))
-  let currentFrame = 0
+  let currentTimeMs = 0
   let currentText = ''
-  let cursorVisible = true
+  const cursorVisible = Math.floor(timeMs / CURSOR_BLINK_MS) % 2 === 0
 
   for (const step of steps) {
-    let stepDuration = 0
+    let stepDurationMs = 0
 
     switch (step.type) {
       case 'type':
-        stepDuration = step.text.length * framesPerChar
-        if (frameIndex < currentFrame + stepDuration) {
-          const progress = frameIndex - currentFrame
-          const charsTyped = Math.floor(progress / framesPerChar)
+        stepDurationMs = step.text.length * MS_PER_CHAR_TYPE
+        if (timeMs < currentTimeMs + stepDurationMs) {
+          const progress = timeMs - currentTimeMs
+          const charsTyped = Math.floor(progress / MS_PER_CHAR_TYPE)
           currentText += step.text.substring(0, charsTyped + 1)
-          cursorVisible = Math.floor(frameIndex / 6) % 2 === 0
-          return { text: currentText, cursorVisible, backgroundFrame: frameIndex }
+          return { text: currentText, cursorVisible, backgroundFrame: Math.floor(timeMs / 16) }
         }
         currentText += step.text
         break
 
       case 'delete':
-        stepDuration = Math.ceil(step.count * framesPerChar * DELETE_SPEED_FACTOR)
-        if (frameIndex < currentFrame + stepDuration) {
-          const progress = frameIndex - currentFrame
+        stepDurationMs = step.count * MS_PER_CHAR_DELETE
+        if (timeMs < currentTimeMs + stepDurationMs) {
+          const progress = timeMs - currentTimeMs
           const charsDeleted = Math.min(
-            Math.floor(progress / (framesPerChar * DELETE_SPEED_FACTOR)) + 1,
+            Math.floor(progress / MS_PER_CHAR_DELETE) + 1,
             step.count
           )
           const newLength = Math.max(0, currentText.length - charsDeleted)
           currentText = currentText.substring(0, newLength)
-          cursorVisible = Math.floor(frameIndex / 6) % 2 === 0
-          return { text: currentText, cursorVisible, backgroundFrame: frameIndex }
+          return { text: currentText, cursorVisible, backgroundFrame: Math.floor(timeMs / 16) }
         }
         currentText = currentText.substring(0, Math.max(0, currentText.length - step.count))
         break
 
       case 'append':
-        stepDuration = step.text.length * framesPerChar
-        if (frameIndex < currentFrame + stepDuration) {
-          const progress = frameIndex - currentFrame
-          const charsTyped = Math.floor(progress / framesPerChar)
+        stepDurationMs = step.text.length * MS_PER_CHAR_TYPE
+        if (timeMs < currentTimeMs + stepDurationMs) {
+          const progress = timeMs - currentTimeMs
+          const charsTyped = Math.floor(progress / MS_PER_CHAR_TYPE)
           const appendedText = step.text.substring(0, charsTyped + 1)
-          cursorVisible = Math.floor(frameIndex / 6) % 2 === 0
-          return { text: currentText + appendedText, cursorVisible, backgroundFrame: frameIndex }
+          return { text: currentText + appendedText, cursorVisible, backgroundFrame: Math.floor(timeMs / 16) }
         }
         currentText += step.text
         break
 
       case 'prepend':
-        stepDuration = step.text.length * framesPerChar
-        if (frameIndex < currentFrame + stepDuration) {
-          const progress = frameIndex - currentFrame
-          const charsTyped = Math.floor(progress / framesPerChar)
+        stepDurationMs = step.text.length * MS_PER_CHAR_TYPE
+        if (timeMs < currentTimeMs + stepDurationMs) {
+          const progress = timeMs - currentTimeMs
+          const charsTyped = Math.floor(progress / MS_PER_CHAR_TYPE)
           const prependedText = step.text.substring(step.text.length - charsTyped - 1)
-          cursorVisible = Math.floor(frameIndex / 6) % 2 === 0
-          return { text: prependedText + currentText, cursorVisible, backgroundFrame: frameIndex }
+          return { text: prependedText + currentText, cursorVisible, backgroundFrame: Math.floor(timeMs / 16) }
         }
         currentText = step.text + currentText
         break
 
       case 'pause':
-        stepDuration = step.duration
-        if (frameIndex < currentFrame + stepDuration) {
-          cursorVisible = Math.floor(frameIndex / 6) % 2 === 0
-          return { text: currentText, cursorVisible, backgroundFrame: frameIndex }
+        stepDurationMs = step.duration * MS_PAUSE_BASE
+        if (timeMs < currentTimeMs + stepDurationMs) {
+          return { text: currentText, cursorVisible, backgroundFrame: Math.floor(timeMs / 16) }
         }
         break
     }
 
-    currentFrame += stepDuration
+    currentTimeMs += stepDurationMs
   }
 
   // If we've gone past all steps, return final state
-  cursorVisible = Math.floor(frameIndex / 6) % 2 === 0
-  return { text: currentText, cursorVisible, backgroundFrame: frameIndex }
+  return { text: currentText, cursorVisible, backgroundFrame: Math.floor(timeMs / 16) }
 }
 
 export function getDefaultConfig(): AnimationConfig {
@@ -175,7 +170,6 @@ export function getDefaultConfig(): AnimationConfig {
       { type: 'sns', handle: '0xkniraj', enabled: true },
       { type: 'ens', handle: '0xkniraj.farcaster', enabled: true },
     ],
-    speed: 2, // 1-10 scale (1 = fast, 10 = slow)
     font: {
       family: 'mono',
       size: 24,
@@ -190,8 +184,14 @@ export function getDefaultConfig(): AnimationConfig {
       height: 200,
     },
     gif: {
-      fps: 10,
-      quality: 20, // Higher = smaller file, lower quality
+      fps: 12, // Middle ground (range: 4-20)
+      playbackSpeed: 1,
+      compression: {
+        enabled: true,
+        lossy: 50,
+        optimizationLevel: 2,
+        colors: null,
+      },
     },
   }
 }

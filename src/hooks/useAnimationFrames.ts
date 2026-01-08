@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { generateAnimationSteps, calculateTotalFrames, interpolateFrame } from '../lib/animationEngine'
+import { generateAnimationSteps, calculateDurationMs, interpolateFrameAtTime } from '../lib/animationEngine'
 import { type AnimationConfig, type FrameState, type AnimationStep } from '../lib/types'
 
 interface UseAnimationFramesReturn {
   currentFrame: number
   totalFrames: number
+  durationMs: number
   frameState: FrameState
   isPlaying: boolean
   play: () => void
@@ -13,13 +14,15 @@ interface UseAnimationFramesReturn {
   setFrame: (frame: number) => void
 }
 
-const FPS = 12
-const FRAME_DURATION = 1000 / FPS
+// Preview uses a fixed FPS for smooth real-time playback
+const PREVIEW_FPS = 15
+const FRAME_DURATION = 1000 / PREVIEW_FPS
 
 export function useAnimationFrames(config: AnimationConfig): UseAnimationFramesReturn {
   const [currentFrame, setCurrentFrame] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [steps, setSteps] = useState<AnimationStep[]>([])
+  const [durationMs, setDurationMs] = useState(0)
   const [totalFrames, setTotalFrames] = useState(0)
   const animationRef = useRef<number | null>(null)
   const lastFrameTimeRef = useRef<number>(0)
@@ -27,8 +30,11 @@ export function useAnimationFrames(config: AnimationConfig): UseAnimationFramesR
   // Update steps when config changes
   useEffect(() => {
     const newSteps = generateAnimationSteps(config)
-    const newTotalFrames = calculateTotalFrames(newSteps, config.speed)
+    const newDurationMs = calculateDurationMs(newSteps)
+    // Preview uses fixed FPS, calculate how many frames that gives us
+    const newTotalFrames = Math.ceil((newDurationMs / 1000) * PREVIEW_FPS)
     setSteps(newSteps)
+    setDurationMs(newDurationMs)
     setTotalFrames(newTotalFrames)
     setCurrentFrame(0)
   }, [config])
@@ -65,7 +71,9 @@ export function useAnimationFrames(config: AnimationConfig): UseAnimationFramesR
     }
   }, [isPlaying, totalFrames])
 
-  const frameState = interpolateFrame(steps, currentFrame, config.speed)
+  // Convert current frame to time and get frame state
+  const timeMs = (currentFrame / PREVIEW_FPS) * 1000
+  const frameState = interpolateFrameAtTime(steps, timeMs)
 
   const play = useCallback(() => setIsPlaying(true), [])
   const pause = useCallback(() => setIsPlaying(false), [])
@@ -80,6 +88,7 @@ export function useAnimationFrames(config: AnimationConfig): UseAnimationFramesR
   return {
     currentFrame,
     totalFrames,
+    durationMs,
     frameState,
     isPlaying,
     play,

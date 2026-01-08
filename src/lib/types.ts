@@ -23,9 +23,19 @@ export interface BackgroundConfig {
   height: number
 }
 
+export interface CompressionSettings {
+  enabled: boolean
+  lossy: number // 0-200 (0 = lossless, 30-80 recommended)
+  optimizationLevel: 1 | 2 | 3
+  colors: number | null // 2-256, null = no reduction
+}
+
+export type PlaybackSpeed = 0.5 | 1 | 1.5 | 2 | 2.5 | 3 | 3.5 | 4
+
 export interface GifSettings {
-  fps: 6 | 8 | 10 | 12 // frames per second
-  quality: number // 1-30, lower = better quality but larger file
+  fps: number // 4-20, controls quality/smoothness (more frames = smoother)
+  playbackSpeed: PlaybackSpeed // How fast the GIF plays
+  compression: CompressionSettings
 }
 
 export interface AnimationConfig {
@@ -33,7 +43,6 @@ export interface AnimationConfig {
   name: string
   role: string
   socials: Social[]
-  speed: number // 1-10, multiplier for animation speed (1 = fast, 10 = slow)
   font: FontConfig
   background: BackgroundConfig
   gif: GifSettings

@@ -10,11 +10,13 @@ interface GifControlsProps {
 
 interface GenerationState {
   isGenerating: boolean
-  phase: 'idle' | 'rendering' | 'encoding' | 'complete'
+  phase: 'idle' | 'rendering' | 'encoding' | 'compressing' | 'complete'
   progress: number
   currentFrame?: number
   totalFrames?: number
   blob?: Blob
+  originalSize?: number
+  compressedSize?: number
   error?: string
 }
 
@@ -35,13 +37,15 @@ export function GifControls({ config, disabled }: GifControlsProps) {
     })
 
     try {
-      const blob = await generateGif(config, (progress) => {
+      const result = await generateGif(config, (progress) => {
         setState((prev) => ({
           ...prev,
           phase: progress.phase,
           progress: progress.progress,
           currentFrame: progress.currentFrame,
           totalFrames: progress.totalFrames,
+          originalSize: progress.originalSize,
+          compressedSize: progress.compressedSize,
         }))
       })
 
@@ -49,7 +53,9 @@ export function GifControls({ config, disabled }: GifControlsProps) {
         isGenerating: false,
         phase: 'complete',
         progress: 100,
-        blob,
+        blob: result.blob,
+        originalSize: result.originalSize,
+        compressedSize: result.compressedSize,
       })
     } catch (error) {
       setState({
@@ -77,6 +83,24 @@ export function GifControls({ config, disabled }: GifControlsProps) {
 
   const isDisabled = disabled || !config.name.trim()
 
+  const getPhaseText = () => {
+    switch (state.phase) {
+      case 'rendering':
+        return 'Rendering frames...'
+      case 'encoding':
+        return 'Encoding GIF...'
+      case 'compressing':
+        return 'Compressing GIF...'
+      default:
+        return 'Processing...'
+    }
+  }
+
+  const showSizeComparison =
+    state.originalSize &&
+    state.compressedSize &&
+    state.originalSize !== state.compressedSize
+
   return (
     <div className="space-y-4">
       <AnimatePresence mode="wait">
@@ -97,7 +121,20 @@ export function GifControls({ config, disabled }: GifControlsProps) {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">GIF Generated!</p>
-                  <p className="text-xs text-white/50">{formatFileSize(state.blob.size)}</p>
+                  <div className="text-xs text-white/50">
+                    {showSizeComparison ? (
+                      <>
+                        <span className="line-through">{formatFileSize(state.originalSize!)}</span>
+                        <span className="mx-1">→</span>
+                        <span className="text-aqua-400">{formatFileSize(state.compressedSize!)}</span>
+                        <span className="ml-1 text-aqua-400">
+                          ({Math.round((1 - state.compressedSize! / state.originalSize!) * 100)}% smaller)
+                        </span>
+                      </>
+                    ) : (
+                      <span>{formatFileSize(state.blob.size)}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -131,7 +168,7 @@ export function GifControls({ config, disabled }: GifControlsProps) {
             <div className="p-4 bg-white/5 border border-white/10 rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-white/70">
-                  {state.phase === 'rendering' ? 'Rendering frames...' : 'Encoding GIF...'}
+                  {getPhaseText()}
                 </span>
                 <span className="text-sm text-white/50">{state.progress}%</span>
               </div>
